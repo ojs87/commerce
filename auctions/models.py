@@ -8,6 +8,7 @@ class User(AbstractUser):
 
 class Auction(models.Model):
     name = models.CharField(max_length=64)
+    slug = models.CharField(max_length=128)
     url = models.URLField(max_length=500)
     CHOICES = [
         ('FA', 'Fashion'),
@@ -19,6 +20,7 @@ class Auction(models.Model):
     ]
     categories = models.CharField(choices=CHOICES, max_length=2)
     description = models.CharField(max_length=500)
+    auctionauthor = models.CharField(max_length=64)
 
 class Bid(models.Model):
     auction = models.ForeignKey('Auction', on_delete=models.CASCADE, related_name="highestbid")
