@@ -95,10 +95,20 @@ def listingview(request, slug):
     c=Bid.objects.filter(auction__slug=slug)
     d=c.aggregate(Max('bidvalue'))
     e=c.filter(bidvalue=d['bidvalue__max'])
+    users = User.objects.get(username=request.user.username)
+    watchlist = users.watchlist.all()
     if request.method == "POST":
         if request.POST["close"] == "close":
             b.update(auctionclosed=True)
             b.update(auctionwinner=e[0].user.username)
+            return HttpResponseRedirect(reverse("listingview", args=(slug, )))
+        elif request.POST["close"] == "removefromwatchlist":
+            auctions = Auction.objects.get(slug=slug)
+            users.watchlist.remove(auctions)
+            return HttpResponseRedirect(reverse("listingview", args=(slug, )))
+        elif request.POST["close"] == "addtowatchlist":
+            auctions = Auction.objects.get(slug=slug)
+            users.watchlist.add(auctions)
             return HttpResponseRedirect(reverse("listingview", args=(slug, )))
         else:
             bid = request.POST["Bid"]
@@ -107,16 +117,19 @@ def listingview(request, slug):
                 newbid.save()
                 return render(request, "auctions/listing.html", {
                     "auctions" : auction,
+                    "watchlist" : watchlist,
                     "message" : "Your bid has been accepted"
                 })
             else:
                 return render(request, "auctions/listing.html", {
                     "auctions" : auction,
+                    "watchlist" : watchlist,
                     "message" : "Your bid is too low"
                 })
 
     return render(request, "auctions/listing.html", {
-        "auctions" : auction
+        "auctions" : auction,
+        "watchlist" : watchlist
     })
 
 
@@ -147,3 +160,15 @@ def createlisting(request):
         return render(request, "auctions/createlisting.html", {
             "form" : CreateListingForm()
         })
+
+def watchlist(request):
+    if request.method == "POST":
+        users = User.objects.get(username=request.user.username)
+        auctions = Auction.objects.get(slug=request.POST["close"])
+        users.watchlist.remove(auctions)
+        return HttpResponseRedirect(reverse("watchlist"))
+    a = User.objects.get(username=request.user.username)
+    watchlist = a.watchlist.annotate(high_bid=Max("highestbid__bidvalue"))
+    return render(request, "auctions/watchlist.html", {
+        "watchlist" : watchlist
+    })

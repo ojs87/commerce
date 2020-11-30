@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Auction, Bid
+from .models import Auction, Bid, User
 
 class AuctionAdmin(admin.ModelAdmin):
     list_display = ("name", "categories", "auctionauthor")
@@ -10,3 +10,4 @@ class BidAdmin(admin.ModelAdmin):
 # Register your models here.
 admin.site.register(Auction, AuctionAdmin)
 admin.site.register(Bid, BidAdmin)
+admin.site.register(User)

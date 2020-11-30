@@ -4,7 +4,7 @@ from django import forms
 
 
 class User(AbstractUser):
-    watchlist = models.ManyToManyField('Auction')
+    watchlist = models.ManyToManyField('Auction', blank=True, related_name="watchlist")
 
 class Auction(models.Model):
     name = models.CharField(max_length=64)

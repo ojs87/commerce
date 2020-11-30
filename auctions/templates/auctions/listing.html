@@ -39,6 +39,8 @@
                            <td><input type="number" name="Bid" step="0.01" required id="id_Bid"></td>
                            <td><input type="submit" value="Submit Bid"></td>
                            <input type="hidden" name="close" value="open">
+                  </form>
+
                   {% else %}
 
                            <form action="{% url 'listingview' auction.slug %}" method="POST">
@@ -47,6 +49,20 @@
                               <input type="hidden" name="close" value="close">
                            </form>
                   {% endif %}
+                  {% if auction in watchlist %}
+                     <form action="{% url 'listingview' auction.slug %}" method="POST">
+                        {% csrf_token %}
+                        <input type="submit" value="Remove from Watchlist">
+                        <input type="hidden" name="close" value="removefromwatchlist">
+                     </form>
+                  {% else %}
+                     <form action="{% url 'listingview' auction.slug %}" method="POST">
+                        {% csrf_token %}
+                        <input type="submit" value ="Add to Watchlist">
+                        <input type="hidden" name="close" value="addtowatchlist">
+                     </form>
+                  {% endif %}
+
                {% else %}
                   <p>
                      Login to place a bid
