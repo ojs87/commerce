@@ -5,7 +5,9 @@ Create Listing
 {% endblock %}
 
 {% block body %}
+
 <table>
+   {{message}}
    <form action="{% url 'createlisting' %}" method=POST>
       {% csrf_token %}
       {{form}}
