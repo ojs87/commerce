@@ -4,24 +4,26 @@
     <h2>Active Listings</h2>
     <hr />
     {% for auction in auctions %}
-      <div id=listing>
-         <a href="{% url 'listingview' slug=auction.slug %}">
-            <h3>
-               {{auction.name}}
-            </h3>
-            <div>
-               {{auction.description}}
-            </div>
-            <img src="{{auction.url}}" width=300px>
-            <div id="highbid">
-               {% if auction.high_bid != None %}
-                  <strong>Current bid is:</strong> £{{auction.high_bid|floatformat:2}}
-               {% else %}
-                  <strong>The minimum bid for this auction is:</strong> £{{auction.minimumbid|floatformat:2}}
-               {% endif %}
-            </div>
-         </a>
-         <hr />
-      </div>
+       {% if auction.auctionclosed == False %}
+         <div id=listing>
+            <a href="{% url 'listingview' slug=auction.slug %}">
+               <h3>
+                  {{auction.name}}
+               </h3>
+               <div>
+                  {{auction.description}}
+               </div>
+               <img src="{{auction.url}}" width=300px>
+               <div id="highbid">
+                  {% if auction.high_bid != None %}
+                     <strong>Current bid is:</strong> £{{auction.high_bid|floatformat:2}}
+                  {% else %}
+                     <strong>The minimum bid for this auction is:</strong> £{{auction.minimumbid|floatformat:2}}
+                  {% endif %}
+               </div>
+            </a>
+            <hr />
+         </div>
+      {% endif %}
    {% endfor %}
 {% endblock %}

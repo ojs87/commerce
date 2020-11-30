@@ -16,22 +16,42 @@
             {{auction.description}}
          </div>
          <img src="{{auction.url}}" width=300px>
-         {% if auction.auctionclosed == True %}            
-            This auction has closed
+         {% if auction.auctionclosed == True and auction.auctionwinner == user.username %}
+         <p>
+            You have won the Auction!
+         </p>
+         {% elif auction.auctionclosed == True and auction.auctionwinner != user.username %}
+         <p>This auction has closed</p>
          {% else %}
             <div id="highbid">
                {% if auction.high_bid != None %}
                   <strong>Current bid is:</strong> £{{auction.high_bid|floatformat:2}}
                {% else %}
-                  <strong>The minimum bid for this auction is:</strong> £{{auction.minimumbid|floatformat:2}}
+                  <strong>No bids yet, the minimum bid for this auction is:</strong> £{{auction.minimumbid|floatformat:2}}
                {% endif %}
-               <form action = "{% url 'listingview' auction.slug %}" method="POST">
-                  {% csrf_token %}
-                  <table>
-                     <tr>
-                        <th><label for="id_Bid">Place Bid:</label></th>
-                        <td><input type="number" name="Bid" step="0.01" required id="id_Bid"></td>
-                        <td><input type="submit" value="Submit Bid"></td>
+               {% if user.is_authenticated %}
+                  {%if user.username != auction.auctionauthor %}
+                  <form action = "{% url 'listingview' auction.slug %}" method="POST">
+                     {% csrf_token %}
+                     <table>
+                        <tr>
+                           <th><label for="id_Bid">Place Bid:</label></th>
+                           <td><input type="number" name="Bid" step="0.01" required id="id_Bid"></td>
+                           <td><input type="submit" value="Submit Bid"></td>
+                           <input type="hidden" name="close" value="open">
+                  {% else %}
+
+                           <form action="{% url 'listingview' auction.slug %}" method="POST">
+                              {% csrf_token %}
+                              <table><tr><td><input type="submit" value="Close Auction"></td>
+                              <input type="hidden" name="close" value="close">
+                           </form>
+                  {% endif %}
+               {% else %}
+                  <p>
+                     Login to place a bid
+                  </p>
+               {% endif %}
                         <td>{{message}}</td>
                      </tr>
                   </table>

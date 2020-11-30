@@ -92,20 +92,29 @@ def listingview(request, slug):
     a = Auction.objects.annotate(high_bid = Max("highestbid__bidvalue"))
     auction = a.filter(slug=slug)
     b=Auction.objects.filter(slug=slug)
+    c=Bid.objects.filter(auction__slug=slug)
+    d=c.aggregate(Max('bidvalue'))
+    e=c.filter(bidvalue=d['bidvalue__max'])
     if request.method == "POST":
-        bid = request.POST["Bid"]
-        if float(bid) > auction[0].high_bid:
-            newbid = Bid(auction = b[0], user=request.user, bidvalue=bid)
-            newbid.save()
-            return render(request, "auctions/listing.html", {
-                "auctions" : auction,
-                "message" : "Your bid has been accepted"
-            })
+        if request.POST["close"] == "close":
+            b.update(auctionclosed=True)
+            b.update(auctionwinner=e[0].user.username)
+            return HttpResponseRedirect(reverse("listingview", args=(slug, )))
         else:
-            return render(request, "auctions/listing.html", {
-                "auctions" : auction,
-                "message" : "Your bid is too low"
-            })
+            bid = request.POST["Bid"]
+            if float(bid) > auction[0].high_bid:
+                newbid = Bid(auction = b[0], user=request.user, bidvalue=bid)
+                newbid.save()
+                return render(request, "auctions/listing.html", {
+                    "auctions" : auction,
+                    "message" : "Your bid has been accepted"
+                })
+            else:
+                return render(request, "auctions/listing.html", {
+                    "auctions" : auction,
+                    "message" : "Your bid is too low"
+                })
+
     return render(request, "auctions/listing.html", {
         "auctions" : auction
     })

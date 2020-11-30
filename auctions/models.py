@@ -22,6 +22,8 @@ class Auction(models.Model):
     description = models.CharField(max_length=500)
     auctionauthor = models.CharField(max_length=64)
     minimumbid = models.DecimalField(max_digits=7, decimal_places=2)
+    auctionclosed = models.BooleanField(default=False)
+    auctionwinner = models.CharField(max_length=64)
 
     def __str__(self):
         return f"{self.name}"
