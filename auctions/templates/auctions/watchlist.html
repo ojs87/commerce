@@ -44,10 +44,26 @@ Watchlist
           {% elif auction.auctionwinner == user.username %}
 
             <p>You won this auction!</p>
+            {% if auction in watchlist %}
+
+               <form action="{% url 'listingview' auction.slug %}" method="POST">
+                  {% csrf_token %}
+                  <input type="submit" value="Remove from Watchlist">
+                  <input type="hidden" name="close" value="removefromwatchlist">
+               </form>
+            {% endif %}
 
           {% else %}
 
             <p>This auction has closed</p>
+            {% if auction in watchlist %}
+
+               <form action="{% url 'listingview' auction.slug %}" method="POST">
+                  {% csrf_token %}
+                  <input type="submit" value="Remove from Watchlist">
+                  <input type="hidden" name="close" value="removefromwatchlist">
+               </form>
+            {% endif %}
 
           {% endif %}
 

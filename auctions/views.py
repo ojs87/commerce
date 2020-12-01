@@ -4,6 +4,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 from django.db.models import Max
+from django.contrib.auth.decorators import login_required
 
 from .models import User, Auction, Bid, Comment
 from django import forms
@@ -115,10 +116,14 @@ def listingview(request, slug):
         #close the auction if the button is pressed
 
         if request.POST["close"] == "close":
+            if len(e) != 0:
+                b.update(auctionclosed=True)
+                b.update(auctionwinner=e[0].user.username)
+                return HttpResponseRedirect(reverse("listingview", args=(slug, )))
 
-            b.update(auctionclosed=True)
-            b.update(auctionwinner=e[0].user.username)
-            return HttpResponseRedirect(reverse("listingview", args=(slug, )))
+            else:
+                b.update(auctionclosed=True)
+                return HttpResponseRedirect(reverse("listingview", args=(slug, )))
 
         #remove the auction from the watchlist if the button is pressed
 
@@ -154,7 +159,7 @@ def listingview(request, slug):
                 return render(request, "auctions/listing.html", {
                     "auctions" : auction,
                     "watchlist" : watchlist,
-                    "message" : "Your bid must at least equal to the minimumbid",
+                    "message" : "Your bid must be at least equal to the minimumbid",
                     "comments" : comments
                 })
 
@@ -204,7 +209,7 @@ def listingview(request, slug):
     })
 
 #View for creating a new auction
-
+@login_required
 def createlisting(request):
     if request.method == "POST":
         form = CreateListingForm(request.POST)
@@ -228,6 +233,7 @@ def createlisting(request):
             "form" : CreateListingForm()
         })
 
+@login_required
 def watchlist(request):
     if request.method == "POST":
         users = User.objects.get(username=request.user.username)
