@@ -5,7 +5,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.db.models import Max
 
-from .models import User, Auction, Bid
+from .models import User, Auction, Bid, Comment
 from django import forms
 
 from slugify import slugify
@@ -89,49 +89,121 @@ def register(request):
         return render(request, "auctions/register.html")
 
 def listingview(request, slug):
+
+    #create query sets for the view, filtering by the slug name of the auction and annotating the highestbid.
+
     a = Auction.objects.annotate(high_bid = Max("highestbid__bidvalue"))
     auction = a.filter(slug=slug)
-    b=Auction.objects.filter(slug=slug)
-    c=Bid.objects.filter(auction__slug=slug)
-    d=c.aggregate(Max('bidvalue'))
-    e=c.filter(bidvalue=d['bidvalue__max'])
+    b = Auction.objects.filter(slug=slug)
+    c = Bid.objects.filter(auction__slug=slug)
+    d = c.aggregate(Max('bidvalue'))
+    e = c.filter(bidvalue = d['bidvalue__max'])
+    comments = Comment.objects.filter(auction__slug=slug)
+
+    #get the watchlist for the current user
+    if not request.user.is_authenticated:
+        return render(request, "auctions/listing.html", {
+            "auctions" : auction,
+            "comments" : comments
+        })
+
     users = User.objects.get(username=request.user.username)
     watchlist = users.watchlist.all()
+
     if request.method == "POST":
+
+        #close the auction if the button is pressed
+
         if request.POST["close"] == "close":
+
             b.update(auctionclosed=True)
             b.update(auctionwinner=e[0].user.username)
             return HttpResponseRedirect(reverse("listingview", args=(slug, )))
+
+        #remove the auction from the watchlist if the button is pressed
+
         elif request.POST["close"] == "removefromwatchlist":
+
             auctions = Auction.objects.get(slug=slug)
             users.watchlist.remove(auctions)
             return HttpResponseRedirect(reverse("listingview", args=(slug, )))
+
+        #add the auction to the watchlist if the button is pressed
+
         elif request.POST["close"] == "addtowatchlist":
+
             auctions = Auction.objects.get(slug=slug)
             users.watchlist.add(auctions)
             return HttpResponseRedirect(reverse("listingview", args=(slug, )))
+
+        elif request.POST["close"] == "comment":
+
+            comment = request.POST["comment"]
+            newcomment = Comment(user=request.user, auction=b[0], comment=comment)
+            newcomment.save()
+            return HttpResponseRedirect(reverse("listingview", args=(slug, )))
+
         else:
+
+        #check if a bid is higher than the minimumbid
+
             bid = request.POST["Bid"]
-            if float(bid) > auction[0].high_bid:
+
+            if float(bid) < auction[0].minimumbid:
+
+                return render(request, "auctions/listing.html", {
+                    "auctions" : auction,
+                    "watchlist" : watchlist,
+                    "message" : "Your bid must at least equal to the minimumbid",
+                    "comments" : comments
+                })
+
+            #check if a high bid exists
+            if auction[0].high_bid != None:
+
+                #check if the bid is higher than the highest bid and return a message
+
+                if float(bid) > auction[0].high_bid:
+
+                    newbid = Bid(auction = b[0], user=request.user, bidvalue=bid)
+                    newbid.save()
+                    return render(request, "auctions/listing.html", {
+                        "auctions" : auction,
+                        "watchlist" : watchlist,
+                        "message" : "Your bid has been accepted",
+                        "comments" : comments
+                    })
+
+                else:
+
+                    return render(request, "auctions/listing.html", {
+                        "auctions" : auction,
+                        "watchlist" : watchlist,
+                        "message" : "Your bid is too low",
+                        "comments" : comments
+                    })
+
+            #accept the bid if a high bid doesn't exist
+
+            else:
+
                 newbid = Bid(auction = b[0], user=request.user, bidvalue=bid)
                 newbid.save()
                 return render(request, "auctions/listing.html", {
                     "auctions" : auction,
                     "watchlist" : watchlist,
-                    "message" : "Your bid has been accepted"
+                    "message" : "Your bid has been accepted",
+                    "comments" : comments
                 })
-            else:
-                return render(request, "auctions/listing.html", {
-                    "auctions" : auction,
-                    "watchlist" : watchlist,
-                    "message" : "Your bid is too low"
-                })
+
 
     return render(request, "auctions/listing.html", {
         "auctions" : auction,
-        "watchlist" : watchlist
+        "watchlist" : watchlist,
+        "comments" : comments
     })
 
+#View for creating a new auction
 
 def createlisting(request):
     if request.method == "POST":
@@ -144,18 +216,13 @@ def createlisting(request):
             category=form.cleaned_data["categories"]
             minimumbid=form.cleaned_data["minimumbid"]
 
-            if category == "" and url == "":
-                return render(request, "auctions/createlisting.html", {
-                    "message" : "You must choose either an Image URL or a Category",
-                    "form" : form
-                })
-            else:
+            #save the new auction
 
-                if request.user.is_authenticated:
-                    user=request.user.username
-                newlisting = Auction(name=name, slug=slug, url=url, description=description, categories=category, auctionauthor=user, minimumbid=minimumbid)
-                newlisting.save()
-                return HttpResponseRedirect(reverse("index"))
+            if request.user.is_authenticated:
+                user=request.user.username
+            newlisting = Auction(name=name, slug=slug, url=url, description=description, categories=category, auctionauthor=user, minimumbid=minimumbid)
+            newlisting.save()
+            return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "auctions/createlisting.html", {
             "form" : CreateListingForm()
@@ -171,4 +238,15 @@ def watchlist(request):
     watchlist = a.watchlist.annotate(high_bid=Max("highestbid__bidvalue"))
     return render(request, "auctions/watchlist.html", {
         "watchlist" : watchlist
+    })
+
+def categories(request, category):
+    #check if the nav link was pressed
+    if category == "allcats":
+        return render(request, "auctions/categories.html")
+
+    cat = Auction.objects.annotate(high_bid = Max("highestbid__bidvalue")).filter(categories=category).filter(auctionclosed=False)
+    return render(request, "auctions/categories.html", {
+        "cats" : cat,
+        "message" : "There are no auctions for this category"
     })

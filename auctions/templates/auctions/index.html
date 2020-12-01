@@ -5,8 +5,9 @@
     <hr />
     {% for auction in auctions %}
        {% if auction.auctionclosed == False %}
-         <div id=listing>
+            <div id="listingcontainer">
             <a href="{% url 'listingview' slug=auction.slug %}">
+               <div id="listing">
                <h3>
                   {{auction.name}}
                </h3>
@@ -21,9 +22,11 @@
                      <strong>The minimum bid for this auction is:</strong> £{{auction.minimumbid|floatformat:2}}
                   {% endif %}
                </div>
+               </div>
             </a>
+            </div>
             <hr />
-         </div>
+
       {% endif %}
    {% endfor %}
 {% endblock %}

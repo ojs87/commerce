@@ -35,3 +35,8 @@ class Bid(models.Model):
 
     def __str__(self):
         return f"{self.auction}, {self.bidvalue}"
+
+class Comment(models.Model):
+    auction = models.ForeignKey('Auction', on_delete=models.CASCADE, related_name="comment")
+    user=models.ForeignKey('User', on_delete=models.CASCADE, related_name="commentowner")
+    comment=models.CharField(max_length=1000)

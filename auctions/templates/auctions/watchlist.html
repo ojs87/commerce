@@ -5,8 +5,10 @@ Watchlist
 {% endblock %}
 
 {% block body %}
+
 <h2>Watchlist</h2>
 <hr />
+
 {% for auction in watchlist %}
 
      <div id=listing>
@@ -18,22 +20,35 @@ Watchlist
               {{auction.description}}
            </div>
            <img src="{{auction.url}}" width=300px>
+
            {% if auction.auctionclosed == False %}
-           <div id="highbid">
-              {% if auction.high_bid != None %}
-                 <strong>Current bid is:</strong> £{{auction.high_bid|floatformat:2}}
-              {% else %}
-                 <strong>The minimum bid for this auction is:</strong> £{{auction.minimumbid|floatformat:2}}
-              {% endif %}
-              <form action="{% url 'watchlist' %}" method="POST">
-                 {% csrf_token %}
-                 <input type="submit" value ="Remove From Watchlist">
-                 <input type="hidden" name="close" value="{{auction.slug}}">
-              </form>
+
+              <div id="highbid">
+
+                 {% if auction.high_bid != None %}
+
+                    <strong>Current bid is:</strong> £{{auction.high_bid|floatformat:2}}
+
+                 {% else %}
+
+                    <strong>The minimum bid for this auction is:</strong> £{{auction.minimumbid|floatformat:2}}
+
+                 {% endif %}
+
+                 <form action="{% url 'watchlist' %}" method="POST">
+                    {% csrf_token %}
+                    <input type="submit" value ="Remove From Watchlist">
+                    <input type="hidden" name="close" value="{{auction.slug}}">
+                 </form>
+
           {% elif auction.auctionwinner == user.username %}
-          <p>You won this auction!</p>
+
+            <p>You won this auction!</p>
+
           {% else %}
-          <p>This auction has closed</p>
+
+            <p>This auction has closed</p>
+
           {% endif %}
 
           </div>

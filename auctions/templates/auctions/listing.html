@@ -7,73 +7,144 @@
 {% endblock %}
 
 {% block body %}
+
    {% for auction in auctions %}
-   <div id=listing>
-         <h3>
+
+   <div>
+         <h1>
             {{auction.name}}
-         </h3>
-         <div>
-            {{auction.description}}
-         </div>
-         <img src="{{auction.url}}" width=300px>
-         {% if auction.auctionclosed == True and auction.auctionwinner == user.username %}
+         </h1>
          <p>
-            You have won the Auction!
+            {{auction.description}}
          </p>
+
+         <img src="{{auction.url}}" width=300px>
+
+         {% if auction.auctionclosed == True and auction.auctionwinner == user.username %}
+
+            <p>You have won the Auction!</p>
+            {% if auction in watchlist %}
+
+               <form action="{% url 'listingview' auction.slug %}" method="POST">
+                  {% csrf_token %}
+                  <input type="submit" value="Remove from Watchlist">
+                  <input type="hidden" name="close" value="removefromwatchlist">
+               </form>
+            {% endif %}
+
          {% elif auction.auctionclosed == True and auction.auctionwinner != user.username %}
-         <p>This auction has closed</p>
+
+            <p>This auction has closed</p>
+            {% if auction in watchlist %}
+
+               <form action="{% url 'listingview' auction.slug %}" method="POST">
+                  {% csrf_token %}
+                  <input type="submit" value="Remove from Watchlist">
+                  <input type="hidden" name="close" value="removefromwatchlist">
+               </form>
+            {% endif %}
+
          {% else %}
+
             <div id="highbid">
+
                {% if auction.high_bid != None %}
+
                   <strong>Current bid is:</strong> £{{auction.high_bid|floatformat:2}}
+
                {% else %}
-                  <strong>No bids yet, the minimum bid for this auction is:</strong> £{{auction.minimumbid|floatformat:2}}
+
+                  <p><strong>No bids yet, the minimum bid for this auction is:</strong> £{{auction.minimumbid|floatformat:2}}</p>
+
                {% endif %}
+            </div>
+
                {% if user.is_authenticated %}
+
                   {%if user.username != auction.auctionauthor %}
-                  <form action = "{% url 'listingview' auction.slug %}" method="POST">
-                     {% csrf_token %}
-                     <table>
-                        <tr>
-                           <th><label for="id_Bid">Place Bid:</label></th>
-                           <td><input type="number" name="Bid" step="0.01" required id="id_Bid"></td>
-                           <td><input type="submit" value="Submit Bid"></td>
-                           <input type="hidden" name="close" value="open">
-                  </form>
+               <table>
+                  <tr>
+                     <form action = "{% url 'listingview' auction.slug %}" method="POST">
+                        {% csrf_token %}
+
+                              <th><label for="id_Bid">Place Bid:</label></th>
+                              <td><input type="number" name="Bid" step="0.01" required id="id_Bid"></td>
+                              <td><input type="submit" value="Submit Bid"></td>
+                              <input type="hidden" name="close" value="open">
+
+                     </form>
+                  </tr>
+                  {{message}}
+               </table>
 
                   {% else %}
+                  <div id="closeauction">
 
                            <form action="{% url 'listingview' auction.slug %}" method="POST">
                               {% csrf_token %}
-                              <table><tr><td><input type="submit" value="Close Auction"></td>
+                              <input type="submit" value="Close Auction">
                               <input type="hidden" name="close" value="close">
                            </form>
+
+                  </div>
+
                   {% endif %}
+                  <div id="watchlistbutton">
+
                   {% if auction in watchlist %}
+
                      <form action="{% url 'listingview' auction.slug %}" method="POST">
                         {% csrf_token %}
                         <input type="submit" value="Remove from Watchlist">
                         <input type="hidden" name="close" value="removefromwatchlist">
                      </form>
+
                   {% else %}
+
                      <form action="{% url 'listingview' auction.slug %}" method="POST">
                         {% csrf_token %}
                         <input type="submit" value ="Add to Watchlist">
                         <input type="hidden" name="close" value="addtowatchlist">
                      </form>
+
                   {% endif %}
 
+                  </div>
+
                {% else %}
-                  <p>
-                     Login to place a bid
-                  </p>
+
+                  <p>Login to place a bid</p>
+
                {% endif %}
-                        <td>{{message}}</td>
-                     </tr>
+               <hr />
+               {% if user.is_authenticated %}
+               <div id="commentdiv">
+                  <form action="{% url 'listingview' auction.slug %}" method="POST">
+                     {% csrf_token %}
+                     <label for="id_comment" value="Leave a Comment"></label>
+                           <textarea name="comment" placeholder="Leave a Comment" id="id_comment"></textarea>
+                           <input type="hidden" name="close" value="comment">
+                           <div id="watchlistbutton"><input type="submit" value="Submit Comment"></div>
+                  </form>
+               </div>
+               {% endif %}
+               <h1>Comments:</h1>
+               <div id="commenttable">
+                  <table>
+
+                        {% for comment in comments %}
+                           <tr><td id="commentbox">{{comment.comment}}</td><td id="userbox">user: {{comment.user}}</td></tr>
+                        {% empty %}
+                           <h3>Be the first to Comment!</h3>
+                        {% endfor %}
+
                   </table>
-               </form>
-            </div>
+               </div>
+
          {% endif %}
+
    </div>
+
    {% endfor %}
+
 {% endblock %}

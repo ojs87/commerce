@@ -1,3 +1,74 @@
 body {
     padding: 10px;
 }
+
+textarea {
+   width: 300px;
+   height: 100px;
+   padding:0px
+}
+
+table {
+}
+
+p {
+   padding:3px;
+}
+
+h1 {
+   padding-left:3px;
+}
+
+a:hover {
+   text-decoration: none;
+}
+
+
+#listing:hover {
+   box-shadow: 0 0 2px 1px rgba(0, 140, 186, 0.5);
+}
+
+#listingcontainer {
+   width: 330px;
+}
+
+#textareadiv  {
+   padding:5px;
+   padding-left:3px;
+   padding-top:0px;
+}
+
+#highbid {
+   padding:5px;
+   padding-left:3px;
+}
+
+#closeauction {
+   padding:5px;
+   padding-left:3px;
+}
+
+#watchlistbutton {
+   padding:5px;
+   padding-left:3px;
+}
+
+#commentdiv {
+   padding:5px;
+   padding-left:0px;
+}
+
+#commenttable {
+   padding-left:3px;
+}
+#commentbox{
+   width:300px;
+   padding:5px;
+   border:1px solid
+}
+
+#userbox {
+   width:100px;
+   padding:5px;
+   border:1px solid
+}
